@@ -1,12 +1,20 @@
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
+  const authHeader = req.headers["authorization"]; // Extract the Authorization header
+  if (!authHeader) {
+    return res.status(403).json({ error: "Access denied. No token provided." });
+  }
+
+  // Split the Bearer prefix from the token
+  const token = authHeader.split(" ")[1];
   if (!token) {
-    return res.status(403).json({ error: 'Access denied. No token provided.' });
+    return res
+      .status(403)
+      .json({ error: "Access denied. Token is malformed." });
   }
 
   try {
@@ -14,13 +22,14 @@ const verifyToken = (req, res, next) => {
     req.user = decoded; // Attach the decoded token payload (user info) to the request
     next();
   } catch (err) {
-    return res.status(401).json({ error: 'Invalid or expired token.' });
+    return res.status(401).json({ error: "Invalid or expired token." });
   }
 };
 
 const verifyAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Access denied. Admin only.' });
+  // Assuming the user role is part of the decoded JWT payload
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Access denied. Admin only." });
   }
   next();
 };
